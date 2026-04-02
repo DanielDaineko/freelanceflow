@@ -4,6 +4,7 @@ import {
   createTaskRequest,
   deleteTaskRequest,
 } from "../../src/api/tasksApi";
+import { updateTaskRequest } from "../api/tasksApi";
 
 const useTasksStore = create((set) => ({
   tasks: [],
@@ -28,6 +29,14 @@ const useTasksStore = create((set) => ({
 
     set((state) => ({
       tasks: [task, ...state.tasks],
+    }));
+  },
+
+  updateTask: async (id, data) => {
+    const updatedTask = await updateTaskRequest(id, data);
+
+    set((state) => ({
+      tasks: state.tasks.map((task) => (task.id === id ? updatedTask : task)),
     }));
   },
 
