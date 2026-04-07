@@ -1,6 +1,7 @@
 const {
   getClientsByUser,
   createClient,
+  updateClient,
   deleteClient,
 } = require("../services/clientService");
 
@@ -22,6 +23,15 @@ const createNewClient = async (req, res) => {
   }
 };
 
+const updateExistingClient = async (req, res) => {
+  try {
+    const client = await updateClient(req.user.id, req.params.id, req.body);
+    res.status(200).json(client);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 const removeClient = async (req, res) => {
   try {
     const result = await deleteClient(req.user.id, req.params.id);
@@ -34,5 +44,6 @@ const removeClient = async (req, res) => {
 module.exports = {
   getClients,
   createNewClient,
+  updateExistingClient,
   removeClient,
 };

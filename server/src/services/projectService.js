@@ -50,6 +50,59 @@ const createProject = async (userId, data) => {
   return project;
 };
 
+const updateProject = async (userId, projectId, data) => {
+  const { title, description, status, budget, deadline, clientId } = data;
+
+  if (!title || title.trim().length < 2) {
+    throw new Error("Project title must be at least 2 characters");
+  }
+
+  if (!clientId) {
+    throw new Error("Client is required");
+  }
+
+  const existingProject = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      userId,
+    },
+  });
+
+  if (!existingProject) {
+    throw new Error("Project not found");
+  }
+
+  const client = await prisma.client.findFirst({
+    where: {
+      id: clientId,
+      userId,
+    },
+  });
+
+  if (!client) {
+    throw new Error("Client not found");
+  }
+
+  const updatedProject = await prisma.project.update({
+    where: {
+      id: projectId,
+    },
+    data: {
+      title,
+      description: description || null,
+      status: status || "planning",
+      budget: budget ? Number(budget) : null,
+      deadline: deadline ? new Date(deadline) : null,
+      clientId,
+    },
+    include: {
+      client: true,
+    },
+  });
+
+  return updatedProject;
+};
+
 const deleteProject = async (userId, projectId) => {
   const existingProject = await prisma.project.findFirst({
     where: {
@@ -74,5 +127,6 @@ const deleteProject = async (userId, projectId) => {
 module.exports = {
   getProjectsByUser,
   createProject,
+  updateProject,
   deleteProject,
 };
