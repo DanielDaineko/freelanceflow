@@ -1,6 +1,7 @@
 const {
   getTransactions,
   createTransaction,
+  updateTransaction,
   deleteTransaction,
 } = require("../services/transactionService");
 
@@ -22,6 +23,15 @@ const create = async (req, res) => {
   }
 };
 
+const updateExistingTransaction = async (req, res) => {
+  try {
+    const tx = await updateTransaction(req.user.id, req.params.id, req.body);
+    res.status(200).json(tx);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
+};
+
 const remove = async (req, res) => {
   try {
     const result = await deleteTransaction(req.user.id, req.params.id);
@@ -31,4 +41,4 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getAll, create, remove };
+module.exports = { getAll, create, updateExistingTransaction, remove };

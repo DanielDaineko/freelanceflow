@@ -34,6 +34,52 @@ const createTransaction = async (userId, data) => {
   });
 };
 
+const updateTransaction = async (userId, transactionId, data) => {
+  const { amount, note, projectId } = data;
+
+  if (!amount || Number(amount) <= 0) {
+    throw new Error("Amount must be positive");
+  }
+
+  const existingTransaction = await prisma.transaction.findFirst({
+    where: {
+      id: transactionId,
+      userId,
+    },
+  });
+
+  if (!existingTransaction) {
+    throw new Error("Transaction not found");
+  }
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      userId,
+    },
+  });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  const updatedTransaction = await prisma.transaction.update({
+    where: {
+      id: transactionId,
+    },
+    data: {
+      amount: Number(amount),
+      note: note || null,
+      projectId,
+    },
+    include: {
+      project: true,
+    },
+  });
+
+  return updatedTransaction;
+};
+
 const deleteTransaction = async (userId, id) => {
   const tx = await prisma.transaction.findFirst({
     where: { id, userId },
@@ -53,5 +99,6 @@ const deleteTransaction = async (userId, id) => {
 module.exports = {
   getTransactions,
   createTransaction,
+  updateTransaction,
   deleteTransaction,
 };
