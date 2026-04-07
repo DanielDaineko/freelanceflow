@@ -10,6 +10,11 @@ export const createProjectRequest = async (data) => {
   return response.data;
 };
 
+export const updateProjectRequest = async (id, data) => {
+  const response = await api.put(`/projects/${id}`, data);
+  return response.data;
+};
+
 export const deleteProjectRequest = async (id) => {
   const response = await api.delete(`/projects/${id}`);
   return response.data;
