@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   getProjectsRequest,
   createProjectRequest,
+  updateProjectRequest,
   deleteProjectRequest,
 } from "../../api/projectsApi";
 
@@ -38,6 +39,30 @@ const useProjectsStore = create((set) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || "Failed to create project",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updateProject: async (id, formData) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const updatedProject = await updateProjectRequest(id, formData);
+
+      set((state) => ({
+        projects: state.projects.map((project) =>
+          project.id === id ? updatedProject : project,
+        ),
+        isLoading: false,
+        error: null,
+      }));
+
+      return updatedProject;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to update project",
         isLoading: false,
       });
       throw error;
