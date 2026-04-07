@@ -1,6 +1,7 @@
 const {
   getProjectsByUser,
   createProject,
+  updateProject,
   deleteProject,
 } = require("../services/projectService");
 
@@ -22,6 +23,15 @@ const createNewProject = async (req, res) => {
   }
 };
 
+const updateExistingProject = async (req, res) => {
+  try {
+    const project = await updateProject(req.user.id, req.params.id, req.body);
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 const removeProject = async (req, res) => {
   try {
     const result = await deleteProject(req.user.id, req.params.id);
@@ -34,5 +44,6 @@ const removeProject = async (req, res) => {
 module.exports = {
   getProjects,
   createNewProject,
+  updateExistingProject,
   removeProject,
 };
