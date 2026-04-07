@@ -14,8 +14,7 @@ router.use(authMiddleware);
 
 router.get("/", getTasks);
 router.post("/", createNewTask);
-router.delete("/:id", removeTask);
 router.put("/:id", updateExistingTask);
-router.put("/:id", updateTask);
+router.delete("/:id", removeTask);
 
 module.exports = router;

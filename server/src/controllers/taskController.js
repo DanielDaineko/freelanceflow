@@ -47,27 +47,10 @@ const removeTask = async (req, res) => {
     res.status(404).json({ message: error.message });
   }
 };
-const prisma = require("../config/prisma");
-
-const updateTask = async (req, res) => {
-  try {
-    const task = await prisma.task.update({
-      where: {
-        id: req.params.id,
-      },
-      data: req.body,
-    });
-
-    res.json(task);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 module.exports = {
   getTasks,
   createNewTask,
   updateExistingTask,
   removeTask,
-  updateTask,
 };
