@@ -10,6 +10,11 @@ export const createClientRequest = async (data) => {
   return response.data;
 };
 
+export const updateClientRequest = async (id, data) => {
+  const response = await api.put(`/clients/${id}`, data);
+  return response.data;
+};
+
 export const deleteClientRequest = async (id) => {
   const response = await api.delete(`/clients/${id}`);
   return response.data;

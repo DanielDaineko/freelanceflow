@@ -2,8 +2,15 @@ import { useEffect, useState } from "react";
 import useClientsStore from "../features/clients/clientsStore";
 
 function ClientsPage() {
-  const { clients, isLoading, error, fetchClients, addClient, removeClient } =
-    useClientsStore();
+  const {
+    clients,
+    isLoading,
+    error,
+    fetchClients,
+    addClient,
+    updateClient,
+    removeClient,
+  } = useClientsStore();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -12,6 +19,8 @@ function ClientsPage() {
     status: "active",
     notes: "",
   });
+
+  const [editingClientId, setEditingClientId] = useState(null);
 
   useEffect(() => {
     fetchClients();
@@ -26,11 +35,27 @@ function ClientsPage() {
     }));
   };
 
+  const handleEdit = (client) => {
+    setEditingClientId(client.id);
+
+    setFormData({
+      name: client.name || "",
+      email: client.email || "",
+      company: client.company || "",
+      status: client.status || "active",
+      notes: client.notes || "",
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      await addClient(formData);
+      if (editingClientId) {
+        await updateClient(editingClientId, formData);
+      } else {
+        await addClient(formData);
+      }
 
       setFormData({
         name: "",
@@ -39,6 +64,8 @@ function ClientsPage() {
         status: "active",
         notes: "",
       });
+
+      setEditingClientId(null);
     } catch {
       return;
     }
@@ -53,7 +80,9 @@ function ClientsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Add Client</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {editingClientId ? "Edit Client" : "Add Client"}
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -111,8 +140,31 @@ function ClientsPage() {
               disabled={isLoading}
               className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
             >
-              {isLoading ? "Saving..." : "Add Client"}
+              {isLoading
+                ? "Saving..."
+                : editingClientId
+                  ? "Update Client"
+                  : "Add Client"}
             </button>
+
+            {editingClientId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingClientId(null);
+                  setFormData({
+                    name: "",
+                    email: "",
+                    company: "",
+                    status: "active",
+                    notes: "",
+                  });
+                }}
+                className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+              >
+                Cancel
+              </button>
+            )}
           </form>
         </div>
 
@@ -152,12 +204,21 @@ function ClientsPage() {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => removeClient(client.id)}
-                    className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(client)}
+                      className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => removeClient(client.id)}
+                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

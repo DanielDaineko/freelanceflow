@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   getClientsRequest,
   createClientRequest,
+  updateClientRequest,
   deleteClientRequest,
 } from "../../api/clientsApi";
 
@@ -35,6 +36,30 @@ const useClientsStore = create((set) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || "Failed to create client",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updateClient: async (id, formData) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const updatedClient = await updateClientRequest(id, formData);
+
+      set((state) => ({
+        clients: state.clients.map((client) =>
+          client.id === id ? updatedClient : client,
+        ),
+        isLoading: false,
+        error: null,
+      }));
+
+      return updatedClient;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to update client",
         isLoading: false,
       });
       throw error;
