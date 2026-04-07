@@ -9,6 +9,7 @@ function ProjectsPage() {
     error,
     fetchProjects,
     addProject,
+    updateProject,
     removeProject,
   } = useProjectsStore();
 
@@ -17,6 +18,8 @@ function ProjectsPage() {
     fetchClients,
     isLoading: clientsLoading,
   } = useClientsStore();
+
+  const [editingProjectId, setEditingProjectId] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,11 +44,35 @@ function ProjectsPage() {
     }));
   };
 
+  const handleEdit = (project) => {
+    setEditingProjectId(project.id);
+
+    setFormData({
+      title: project.title || "",
+      description: project.description || "",
+      status: project.status || "planning",
+      budget: project.budget ?? "",
+      deadline: project.deadline
+        ? new Date(project.deadline).toISOString().split("T")[0]
+        : "",
+      clientId: project.clientId || "",
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      await addProject(formData);
+      const payload = {
+        ...formData,
+        budget: formData.budget === "" ? "" : Number(formData.budget),
+      };
+
+      if (editingProjectId) {
+        await updateProject(editingProjectId, payload);
+      } else {
+        await addProject(payload);
+      }
 
       setFormData({
         title: "",
@@ -55,9 +82,23 @@ function ProjectsPage() {
         deadline: "",
         clientId: "",
       });
+
+      setEditingProjectId(null);
     } catch {
       return;
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProjectId(null);
+    setFormData({
+      title: "",
+      description: "",
+      status: "planning",
+      budget: "",
+      deadline: "",
+      clientId: "",
+    });
   };
 
   return (
@@ -69,7 +110,9 @@ function ProjectsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Add Project</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {editingProjectId ? "Edit Project" : "Add Project"}
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -140,8 +183,22 @@ function ProjectsPage() {
               disabled={projectsLoading || clientsLoading}
               className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
             >
-              {projectsLoading ? "Saving..." : "Add Project"}
+              {projectsLoading
+                ? "Saving..."
+                : editingProjectId
+                  ? "Update Project"
+                  : "Add Project"}
             </button>
+
+            {editingProjectId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+              >
+                Cancel
+              </button>
+            )}
           </form>
         </div>
 
@@ -193,12 +250,21 @@ function ProjectsPage() {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => removeProject(project.id)}
-                    className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(project)}
+                      className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => removeProject(project.id)}
+                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
