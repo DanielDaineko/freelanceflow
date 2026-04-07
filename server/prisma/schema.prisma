@@ -24,6 +24,7 @@ model User {
   clients   Client[]
   projects  Project[]
   tasks     Task[]
+  transactions Transaction[]
 }
 
 model Client {
@@ -59,6 +60,7 @@ model Project {
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   tasks       Task[]
+  transactions Transaction[]
 }
 
 model Task {
@@ -76,4 +78,17 @@ model Task {
 
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  amount    Float
+  note      String?
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 }
