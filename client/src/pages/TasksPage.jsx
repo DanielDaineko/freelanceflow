@@ -9,8 +9,8 @@ function TasksPage() {
     error,
     fetchTasks,
     addTask,
-    removeTask,
     updateTask,
+    removeTask,
   } = useTasksStore();
 
   const {
@@ -20,11 +20,14 @@ function TasksPage() {
   } = useProjectsStore();
 
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState(null);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     priority: "medium",
-    deadline: "",
+    dueDate: "",
+    status: "todo",
   });
 
   useEffect(() => {
@@ -50,6 +53,20 @@ function TasksPage() {
     }));
   };
 
+  const handleEdit = (task) => {
+    setEditingTaskId(task.id);
+
+    setFormData({
+      title: task.title || "",
+      description: task.description || "",
+      priority: task.priority || "medium",
+      dueDate: task.dueDate
+        ? new Date(task.dueDate).toISOString().split("T")[0]
+        : "",
+      status: task.status || "todo",
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -58,37 +75,47 @@ function TasksPage() {
     }
 
     try {
-      await addTask({
+      const payload = {
         ...formData,
+        dueDate: formData.dueDate || null,
         projectId: selectedProjectId,
-        deadline: formData.deadline || null,
-      });
+      };
+
+      if (editingTaskId) {
+        await updateTask(editingTaskId, payload);
+      } else {
+        await addTask(payload);
+      }
 
       setFormData({
         title: "",
         description: "",
         priority: "medium",
-        deadline: "",
+        dueDate: "",
+        status: "todo",
       });
+
+      setEditingTaskId(null);
     } catch {
       return;
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setFormData({
+      title: "",
+      description: "",
+      priority: "medium",
+      dueDate: "",
+      status: "todo",
+    });
   };
 
   const groupedTasks = {
     todo: tasks.filter((task) => task.status === "todo"),
     in_progress: tasks.filter((task) => task.status === "in_progress"),
     done: tasks.filter((task) => task.status === "done"),
-  };
-
-  const moveTask = async (task) => {
-    let newStatus = "todo";
-
-    if (task.status === "todo") newStatus = "in_progress";
-    else if (task.status === "in_progress") newStatus = "done";
-    else if (task.status === "done") newStatus = "todo";
-
-    await updateTask(task.id, { status: newStatus });
   };
 
   return (
@@ -130,7 +157,9 @@ function TasksPage() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Add Task</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {editingTaskId ? "Edit Task" : "Add Task"}
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
@@ -162,10 +191,21 @@ function TasksPage() {
                 <option value="high">High priority</option>
               </select>
 
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
+              >
+                <option value="todo">Todo</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+
               <input
                 type="date"
-                name="deadline"
-                value={formData.deadline}
+                name="dueDate"
+                value={formData.dueDate}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
               />
@@ -177,8 +217,22 @@ function TasksPage() {
                 disabled={tasksLoading}
                 className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
               >
-                {tasksLoading ? "Saving..." : "Add Task"}
+                {tasksLoading
+                  ? "Saving..."
+                  : editingTaskId
+                    ? "Update Task"
+                    : "Add Task"}
               </button>
+
+              {editingTaskId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+                >
+                  Cancel
+                </button>
+              )}
             </form>
           </div>
 
@@ -193,151 +247,70 @@ function TasksPage() {
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Todo
-                  </h3>
+                {[
+                  { key: "todo", title: "Todo" },
+                  { key: "in_progress", title: "In Progress" },
+                  { key: "done", title: "Done" },
+                ].map((column) => (
+                  <div
+                    key={column.key}
+                    className="bg-slate-800 border border-slate-700 rounded-xl p-4"
+                  >
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      {column.title}
+                    </h3>
 
-                  <div className="space-y-3">
-                    {groupedTasks.todo.length === 0 ? (
-                      <p className="text-slate-400 text-sm">No tasks</p>
-                    ) : (
-                      groupedTasks.todo.map((task) => (
-                        <div
-                          key={task.id}
-                          className="bg-slate-900 border border-slate-700 rounded-xl p-4"
-                        >
-                          <h4 className="text-white font-medium">
-                            {task.title}
-                          </h4>
+                    <div className="space-y-3">
+                      {groupedTasks[column.key].length === 0 ? (
+                        <p className="text-slate-400 text-sm">No tasks</p>
+                      ) : (
+                        groupedTasks[column.key].map((task) => (
+                          <div
+                            key={task.id}
+                            className="bg-slate-900 border border-slate-700 rounded-xl p-4"
+                          >
+                            <h4 className="text-white font-medium">
+                              {task.title}
+                            </h4>
 
-                          <p className="text-slate-400 text-sm mt-1">
-                            Priority: {task.priority}
-                          </p>
-
-                          <p className="text-slate-400 text-sm">
-                            Due:{" "}
-                            {task.dueDate
-                              ? new Date(task.dueDate).toLocaleDateString()
-                              : "No deadline"}
-                          </p>
-
-                          {task.description && (
-                            <p className="text-slate-300 text-sm mt-2">
-                              {task.description}
+                            <p className="text-slate-400 text-sm mt-1">
+                              Priority: {task.priority}
                             </p>
-                          )}
-                          <button
-                            onClick={() => moveTask(task)}
-                            className="mt-3 mr-2 bg-purple-500 hover:bg-purple-600 px-3 py-2 rounded-lg text-white text-sm"
-                          >
-                            Move →
-                          </button>
-                          <button
-                            onClick={() => removeTask(task.id)}
-                            className="mt-3 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
 
-                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    In Progress
-                  </h3>
-
-                  <div className="space-y-3">
-                    {groupedTasks.in_progress.length === 0 ? (
-                      <p className="text-slate-400 text-sm">No tasks</p>
-                    ) : (
-                      groupedTasks.in_progress.map((task) => (
-                        <div
-                          key={task.id}
-                          className="bg-slate-900 border border-slate-700 rounded-xl p-4"
-                        >
-                          <h4 className="text-white font-medium">
-                            {task.title}
-                          </h4>
-
-                          <p className="text-slate-400 text-sm mt-1">
-                            Priority: {task.priority}
-                          </p>
-
-                          <p className="text-slate-400 text-sm">
-                            Due:{" "}
-                            {task.dueDate
-                              ? new Date(task.dueDate).toLocaleDateString()
-                              : "No deadline"}
-                          </p>
-
-                          {task.description && (
-                            <p className="text-slate-300 text-sm mt-2">
-                              {task.description}
+                            <p className="text-slate-400 text-sm">
+                              Due:{" "}
+                              {task.dueDate
+                                ? new Date(task.dueDate).toLocaleDateString()
+                                : "No deadline"}
                             </p>
-                          )}
 
-                          <button
-                            onClick={() => removeTask(task.id)}
-                            className="mt-3 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ))
-                    )}
+                            {task.description && (
+                              <p className="text-slate-300 text-sm mt-2">
+                                {task.description}
+                              </p>
+                            )}
+
+                            <div className="flex gap-2 mt-3">
+                              <button
+                                onClick={() => handleEdit(task)}
+                                className="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-lg text-white text-sm"
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                onClick={() => removeTask(task.id)}
+                                className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Done
-                  </h3>
-
-                  <div className="space-y-3">
-                    {groupedTasks.done.length === 0 ? (
-                      <p className="text-slate-400 text-sm">No tasks</p>
-                    ) : (
-                      groupedTasks.done.map((task) => (
-                        <div
-                          key={task.id}
-                          className="bg-slate-900 border border-slate-700 rounded-xl p-4"
-                        >
-                          <h4 className="text-white font-medium">
-                            {task.title}
-                          </h4>
-
-                          <p className="text-slate-400 text-sm mt-1">
-                            Priority: {task.priority}
-                          </p>
-
-                          <p className="text-slate-400 text-sm">
-                            Due:{" "}
-                            {task.dueDate
-                              ? new Date(task.dueDate).toLocaleDateString()
-                              : "No deadline"}
-                          </p>
-
-                          {task.description && (
-                            <p className="text-slate-300 text-sm mt-2">
-                              {task.description}
-                            </p>
-                          )}
-
-                          <button
-                            onClick={() => removeTask(task.id)}
-                            className="mt-3 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
             )}
           </div>

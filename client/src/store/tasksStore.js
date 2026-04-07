@@ -2,9 +2,9 @@ import { create } from "zustand";
 import {
   getTasksRequest,
   createTaskRequest,
+  updateTaskRequest,
   deleteTaskRequest,
-} from "../../src/api/tasksApi";
-import { updateTaskRequest } from "../api/tasksApi";
+} from "../api/tasksApi";
 
 const useTasksStore = create((set) => ({
   tasks: [],
@@ -13,9 +13,14 @@ const useTasksStore = create((set) => ({
 
   fetchTasks: async (projectId) => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
+
       const tasks = await getTasksRequest(projectId);
-      set({ tasks, isLoading: false });
+
+      set({
+        tasks,
+        isLoading: false,
+      });
     } catch (error) {
       set({
         error: error.response?.data?.message || "Failed to load tasks",
@@ -25,27 +30,61 @@ const useTasksStore = create((set) => ({
   },
 
   addTask: async (data) => {
-    const task = await createTaskRequest(data);
+    try {
+      set({ isLoading: true, error: null });
 
-    set((state) => ({
-      tasks: [task, ...state.tasks],
-    }));
+      const task = await createTaskRequest(data);
+
+      set((state) => ({
+        tasks: [task, ...state.tasks],
+        isLoading: false,
+        error: null,
+      }));
+
+      return task;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to create task",
+        isLoading: false,
+      });
+      throw error;
+    }
   },
 
-  updateTask: async (id, data) => {
-    const updatedTask = await updateTaskRequest(id, data);
+  updateTask: async (id, formData) => {
+    try {
+      set({ isLoading: true, error: null });
 
-    set((state) => ({
-      tasks: state.tasks.map((task) => (task.id === id ? updatedTask : task)),
-    }));
+      const updatedTask = await updateTaskRequest(id, formData);
+
+      set((state) => ({
+        tasks: state.tasks.map((task) => (task.id === id ? updatedTask : task)),
+        isLoading: false,
+        error: null,
+      }));
+
+      return updatedTask;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to update task",
+        isLoading: false,
+      });
+      throw error;
+    }
   },
 
   removeTask: async (id) => {
-    await deleteTaskRequest(id);
+    try {
+      await deleteTaskRequest(id);
 
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
-    }));
+      set((state) => ({
+        tasks: state.tasks.filter((task) => task.id !== id),
+      }));
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to delete task",
+      });
+    }
   },
 }));
 
