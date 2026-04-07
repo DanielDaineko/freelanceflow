@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   getTransactionsRequest,
   createTransactionRequest,
+  updateTransactionRequest,
   deleteTransactionRequest,
 } from "../api/transactionsApi";
 
@@ -44,6 +45,30 @@ const useTransactionsStore = create((set) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || "Failed to create transaction",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updateTransaction: async (id, data) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const updatedTransaction = await updateTransactionRequest(id, data);
+
+      set((state) => ({
+        transactions: state.transactions.map((transaction) =>
+          transaction.id === id ? updatedTransaction : transaction,
+        ),
+        isLoading: false,
+        error: null,
+      }));
+
+      return updatedTransaction;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to update transaction",
         isLoading: false,
       });
       throw error;

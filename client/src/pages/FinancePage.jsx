@@ -9,6 +9,7 @@ function FinancePage() {
     error,
     fetchTransactions,
     addTransaction,
+    updateTransaction,
     removeTransaction,
   } = useTransactionsStore();
 
@@ -17,6 +18,8 @@ function FinancePage() {
     fetchProjects,
     isLoading: projectsLoading,
   } = useProjectsStore();
+
+  const [editingTransactionId, setEditingTransactionId] = useState(null);
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -44,23 +47,50 @@ function FinancePage() {
     }));
   };
 
+  const handleEdit = (transaction) => {
+    setEditingTransactionId(transaction.id);
+
+    setFormData({
+      amount: transaction.amount ?? "",
+      projectId: transaction.projectId || "",
+      note: transaction.note || "",
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      await addTransaction({
+      const payload = {
         ...formData,
         amount: Number(formData.amount),
-      });
+      };
+
+      if (editingTransactionId) {
+        await updateTransaction(editingTransactionId, payload);
+      } else {
+        await addTransaction(payload);
+      }
 
       setFormData({
         amount: "",
         projectId: "",
         note: "",
       });
+
+      setEditingTransactionId(null);
     } catch {
       return;
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTransactionId(null);
+    setFormData({
+      amount: "",
+      projectId: "",
+      note: "",
+    });
   };
 
   return (
@@ -79,7 +109,9 @@ function FinancePage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Add Payment</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {editingTransactionId ? "Edit Payment" : "Add Payment"}
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -121,8 +153,22 @@ function FinancePage() {
               disabled={transactionsLoading || projectsLoading}
               className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
             >
-              {transactionsLoading ? "Saving..." : "Add Payment"}
+              {transactionsLoading
+                ? "Saving..."
+                : editingTransactionId
+                  ? "Update Payment"
+                  : "Add Payment"}
             </button>
+
+            {editingTransactionId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+              >
+                Cancel
+              </button>
+            )}
           </form>
         </div>
 
@@ -163,12 +209,21 @@ function FinancePage() {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => removeTransaction(transaction.id)}
-                    className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(transaction)}
+                      className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => removeTransaction(transaction.id)}
+                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
