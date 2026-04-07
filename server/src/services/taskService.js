@@ -46,6 +46,52 @@ const createTask = async (userId, data) => {
   return task;
 };
 
+const updateTask = async (userId, taskId, data) => {
+  const { title, description, priority, dueDate, status, projectId } = data;
+
+  if (!title || title.trim().length < 2) {
+    throw new Error("Task title must be at least 2 characters");
+  }
+
+  const existingTask = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      userId,
+    },
+  });
+
+  if (!existingTask) {
+    throw new Error("Task not found");
+  }
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      userId,
+    },
+  });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  const updatedTask = await prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data: {
+      title,
+      description: description || null,
+      priority: priority || "medium",
+      status: status || "todo",
+      dueDate: dueDate ? new Date(dueDate) : null,
+      projectId,
+    },
+  });
+
+  return updatedTask;
+};
+
 const deleteTask = async (userId, taskId) => {
   const existingTask = await prisma.task.findFirst({
     where: {
@@ -70,5 +116,6 @@ const deleteTask = async (userId, taskId) => {
 module.exports = {
   getTasksByProject,
   createTask,
+  updateTask,
   deleteTask,
 };

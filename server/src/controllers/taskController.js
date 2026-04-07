@@ -1,6 +1,7 @@
 const {
   getTasksByProject,
   createTask,
+  updateTask,
   deleteTask,
 } = require("../services/taskService");
 
@@ -24,6 +25,15 @@ const createNewTask = async (req, res) => {
     res.status(201).json(task);
   } catch (error) {
     console.log("CREATE TASK ERROR:", error.message);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const updateExistingTask = async (req, res) => {
+  try {
+    const task = await updateTask(req.user.id, req.params.id, req.body);
+    res.status(200).json(task);
+  } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
@@ -57,6 +67,7 @@ const updateTask = async (req, res) => {
 module.exports = {
   getTasks,
   createNewTask,
+  updateExistingTask,
   removeTask,
   updateTask,
 };
