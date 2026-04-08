@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import useClientsStore from "../features/clients/clientsStore";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Textarea from "../components/ui/Textarea";
+import Select from "../components/ui/Select";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
 
 function ClientsPage() {
   const {
@@ -71,6 +77,17 @@ function ClientsPage() {
     }
   };
 
+  const handleCancelEdit = () => {
+    setEditingClientId(null);
+    setFormData({
+      name: "",
+      email: "",
+      company: "",
+      status: "active",
+      notes: "",
+    });
+  };
+
   return (
     <div>
       <div className="mb-8">
@@ -79,104 +96,93 @@ function ClientsPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <Card>
           <h2 className="text-xl font-semibold mb-4">
             {editingClientId ? "Edit Client" : "Add Client"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
+            <Input
               type="text"
               name="name"
               placeholder="Client name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             />
 
-            <input
+            <Input
               type="email"
               name="email"
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             />
 
-            <input
+            <Input
               type="text"
               name="company"
               placeholder="Company"
               value={formData.company}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             />
 
-            <select
+            <Select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             >
               <option value="active">Active</option>
               <option value="lead">Lead</option>
               <option value="paused">Paused</option>
               <option value="completed">Completed</option>
-            </select>
+            </Select>
 
-            <textarea
+            <Textarea
               name="notes"
               placeholder="Notes"
               value={formData.notes}
               onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
+              rows={4}
             />
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
+              variant="primary"
+              className="w-full"
             >
               {isLoading
                 ? "Saving..."
                 : editingClientId
                   ? "Update Client"
                   : "Add Client"}
-            </button>
+            </Button>
 
             {editingClientId && (
-              <button
+              <Button
                 type="button"
-                onClick={() => {
-                  setEditingClientId(null);
-                  setFormData({
-                    name: "",
-                    email: "",
-                    company: "",
-                    status: "active",
-                    notes: "",
-                  });
-                }}
-                className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+                onClick={handleCancelEdit}
+                variant="secondary"
+                className="w-full"
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </form>
-        </div>
+        </Card>
 
-        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <Card className="xl:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Client List</h2>
 
           {isLoading && clients.length === 0 ? (
             <p className="text-slate-400">Loading clients...</p>
           ) : clients.length === 0 ? (
-            <p className="text-slate-400">
-              No clients yet. Add your first one.
-            </p>
+            <EmptyState
+              title="No clients yet"
+              description="Add your first client to start managing your freelance business."
+            />
           ) : (
             <div className="space-y-4">
               {clients.map((client) => (
@@ -205,25 +211,22 @@ function ClientsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(client)}
-                      className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white"
-                    >
+                    <Button onClick={() => handleEdit(client)} variant="info">
                       Edit
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       onClick={() => removeClient(client.id)}
-                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
+                      variant="danger"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );
