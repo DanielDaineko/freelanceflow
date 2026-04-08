@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import useTransactionsStore from "../store/transactionsStore";
 import useProjectsStore from "../features/projects/projectsStore";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Textarea from "../components/ui/Textarea";
+import Select from "../components/ui/Select";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
 
 function FinancePage() {
   const {
@@ -102,32 +108,30 @@ function FinancePage() {
         </p>
       </div>
 
-      <div className="mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <Card className="mb-6">
         <h2 className="text-xl font-semibold mb-3">Total Income</h2>
         <p className="text-4xl font-bold text-green-400">${totalIncome}</p>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <Card>
           <h2 className="text-xl font-semibold mb-4">
             {editingTransactionId ? "Edit Payment" : "Add Payment"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
+            <Input
               type="number"
               name="amount"
               placeholder="Amount"
               value={formData.amount}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             />
 
-            <select
+            <Select
               name="projectId"
               value={formData.projectId}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
             >
               <option value="">Select project</option>
               {projects.map((project) => (
@@ -135,52 +139,54 @@ function FinancePage() {
                   {project.title}
                 </option>
               ))}
-            </select>
+            </Select>
 
-            <textarea
+            <Textarea
               name="note"
               placeholder="Payment note"
               value={formData.note}
               onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
+              rows={4}
             />
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <button
+            <Button
               type="submit"
               disabled={transactionsLoading || projectsLoading}
-              className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
+              variant="primary"
+              className="w-full"
             >
               {transactionsLoading
                 ? "Saving..."
                 : editingTransactionId
                   ? "Update Payment"
                   : "Add Payment"}
-            </button>
+            </Button>
 
             {editingTransactionId && (
-              <button
+              <Button
                 type="button"
                 onClick={handleCancelEdit}
-                className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+                variant="secondary"
+                className="w-full"
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </form>
-        </div>
+        </Card>
 
-        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <Card className="xl:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Payments</h2>
 
           {transactionsLoading && transactions.length === 0 ? (
             <p className="text-slate-400">Loading payments...</p>
           ) : transactions.length === 0 ? (
-            <p className="text-slate-400">
-              No payments yet. Add your first transaction.
-            </p>
+            <EmptyState
+              title="No payments yet"
+              description="Add your first payment to start tracking income."
+            />
           ) : (
             <div className="space-y-4">
               {transactions.map((transaction) => (
@@ -210,25 +216,25 @@ function FinancePage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button
+                    <Button
                       onClick={() => handleEdit(transaction)}
-                      className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white"
+                      variant="info"
                     >
                       Edit
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       onClick={() => removeTransaction(transaction.id)}
-                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white"
+                      variant="danger"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

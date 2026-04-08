@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import useTasksStore from "../store/tasksStore";
 import useProjectsStore from "../features/projects/projectsStore";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Textarea from "../components/ui/Textarea";
+import Select from "../components/ui/Select";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
 
 function TasksPage() {
   const {
@@ -42,6 +48,14 @@ function TasksPage() {
 
   const handleProjectChange = (event) => {
     setSelectedProjectId(event.target.value);
+    setEditingTaskId(null);
+    setFormData({
+      title: "",
+      description: "",
+      priority: "medium",
+      dueDate: "",
+      status: "todo",
+    });
   };
 
   const handleChange = (event) => {
@@ -118,6 +132,12 @@ function TasksPage() {
     done: tasks.filter((task) => task.status === "done"),
   };
 
+  const columns = [
+    { key: "todo", title: "Todo" },
+    { key: "in_progress", title: "In Progress" },
+    { key: "done", title: "Done" },
+  ];
+
   return (
     <div>
       <div className="mb-8">
@@ -125,15 +145,15 @@ function TasksPage() {
         <p className="text-slate-400">Manage tasks inside your projects.</p>
       </div>
 
-      <div className="mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <Card className="mb-6">
         <label className="block text-sm text-slate-300 mb-2">
           Select Project
         </label>
 
-        <select
+        <Select
           value={selectedProjectId}
           onChange={handleProjectChange}
-          className="w-full max-w-md px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none text-white"
+          className="max-w-md"
         >
           <option value="">Choose a project</option>
           {projects.map((project) => (
@@ -141,117 +161,110 @@ function TasksPage() {
               {project.title}
             </option>
           ))}
-        </select>
+        </Select>
 
         {projectsLoading && (
           <p className="text-slate-400 text-sm mt-2">Loading projects...</p>
         )}
-      </div>
+      </Card>
 
       {!selectedProjectId ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <p className="text-slate-400">
-            Choose a project first to manage tasks.
-          </p>
-        </div>
+        <EmptyState
+          title="Choose a project first"
+          description="Select a project above to manage its tasks."
+        />
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <Card>
             <h2 className="text-xl font-semibold mb-4">
               {editingTaskId ? "Edit Task" : "Add Task"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <input
+              <Input
                 type="text"
                 name="title"
                 placeholder="Task title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
               />
 
-              <textarea
+              <Textarea
                 name="description"
                 placeholder="Description"
                 value={formData.description}
                 onChange={handleChange}
-                rows="4"
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
+                rows={4}
               />
 
-              <select
+              <Select
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
               >
                 <option value="low">Low priority</option>
                 <option value="medium">Medium priority</option>
                 <option value="high">High priority</option>
-              </select>
+              </Select>
 
-              <select
+              <Select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
               >
                 <option value="todo">Todo</option>
                 <option value="in_progress">In Progress</option>
                 <option value="done">Done</option>
-              </select>
+              </Select>
 
-              <input
+              <Input
                 type="date"
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none"
               />
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
 
-              <button
+              <Button
                 type="submit"
                 disabled={tasksLoading}
-                className="w-full bg-violet-600 hover:bg-violet-700 px-4 py-3 rounded-lg font-medium"
+                variant="primary"
+                className="w-full"
               >
                 {tasksLoading
                   ? "Saving..."
                   : editingTaskId
                     ? "Update Task"
                     : "Add Task"}
-              </button>
+              </Button>
 
               {editingTaskId && (
-                <button
+                <Button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="w-full mt-2 bg-slate-700 hover:bg-slate-600 px-4 py-3 rounded-lg text-white"
+                  variant="secondary"
+                  className="w-full"
                 >
                   Cancel
-                </button>
+                </Button>
               )}
             </form>
-          </div>
+          </Card>
 
-          <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <Card className="xl:col-span-2">
             <h2 className="text-xl font-semibold mb-4">Task Board</h2>
 
             {tasksLoading && tasks.length === 0 ? (
               <p className="text-slate-400">Loading tasks...</p>
             ) : tasks.length === 0 ? (
-              <p className="text-slate-400">
-                No tasks yet. Add your first task.
-              </p>
+              <EmptyState
+                title="No tasks yet"
+                description="Add your first task for this project."
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { key: "todo", title: "Todo" },
-                  { key: "in_progress", title: "In Progress" },
-                  { key: "done", title: "Done" },
-                ].map((column) => (
+                {columns.map((column) => (
                   <div
                     key={column.key}
                     className="bg-slate-800 border border-slate-700 rounded-xl p-4"
@@ -291,19 +304,21 @@ function TasksPage() {
                             )}
 
                             <div className="flex gap-2 mt-3">
-                              <button
+                              <Button
                                 onClick={() => handleEdit(task)}
-                                className="bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-lg text-white text-sm"
+                                variant="info"
+                                className="px-3 py-2 text-sm"
                               >
                                 Edit
-                              </button>
+                              </Button>
 
-                              <button
+                              <Button
                                 onClick={() => removeTask(task.id)}
-                                className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white text-sm"
+                                variant="danger"
+                                className="px-3 py-2 text-sm"
                               >
                                 Delete
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         ))
@@ -313,7 +328,7 @@ function TasksPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
     </div>
