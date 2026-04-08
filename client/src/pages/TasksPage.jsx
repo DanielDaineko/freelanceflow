@@ -7,6 +7,7 @@ import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 function TasksPage() {
   const {
@@ -27,6 +28,7 @@ function TasksPage() {
 
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -124,6 +126,21 @@ function TasksPage() {
       dueDate: "",
       status: "todo",
     });
+  };
+
+  const handleDeleteClick = (task) => {
+    setTaskToDelete(task);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+
+    await removeTask(taskToDelete.id);
+    setTaskToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setTaskToDelete(null);
   };
 
   const groupedTasks = {
@@ -313,7 +330,7 @@ function TasksPage() {
                               </Button>
 
                               <Button
-                                onClick={() => removeTask(task.id)}
+                                onClick={() => handleDeleteClick(task)}
                                 variant="danger"
                                 className="px-3 py-2 text-sm"
                               >
@@ -331,6 +348,20 @@ function TasksPage() {
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!taskToDelete}
+        title="Delete task?"
+        description={
+          taskToDelete
+            ? `Are you sure you want to delete "${taskToDelete.title}"?`
+            : "Are you sure you want to delete this task?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }

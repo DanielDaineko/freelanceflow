@@ -7,6 +7,7 @@ import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 function ProjectsPage() {
   const {
@@ -26,6 +27,7 @@ function ProjectsPage() {
   } = useClientsStore();
 
   const [editingProjectId, setEditingProjectId] = useState(null);
+  const [projectToDelete, setProjectToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -105,6 +107,21 @@ function ProjectsPage() {
       deadline: "",
       clientId: "",
     });
+  };
+
+  const handleDeleteClick = (project) => {
+    setProjectToDelete(project);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    await removeProject(projectToDelete.id);
+    setProjectToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setProjectToDelete(null);
   };
 
   return (
@@ -259,7 +276,7 @@ function ProjectsPage() {
                     </Button>
 
                     <Button
-                      onClick={() => removeProject(project.id)}
+                      onClick={() => handleDeleteClick(project)}
                       variant="danger"
                     >
                       Delete
@@ -271,6 +288,20 @@ function ProjectsPage() {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!projectToDelete}
+        title="Delete project?"
+        description={
+          projectToDelete
+            ? `Are you sure you want to delete "${projectToDelete.title}"?`
+            : "Are you sure you want to delete this project?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }

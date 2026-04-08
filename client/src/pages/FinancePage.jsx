@@ -7,6 +7,7 @@ import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 function FinancePage() {
   const {
@@ -26,6 +27,7 @@ function FinancePage() {
   } = useProjectsStore();
 
   const [editingTransactionId, setEditingTransactionId] = useState(null);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -97,6 +99,21 @@ function FinancePage() {
       projectId: "",
       note: "",
     });
+  };
+
+  const handleDeleteClick = (transaction) => {
+    setTransactionToDelete(transaction);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!transactionToDelete) return;
+
+    await removeTransaction(transactionToDelete.id);
+    setTransactionToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setTransactionToDelete(null);
   };
 
   return (
@@ -224,7 +241,7 @@ function FinancePage() {
                     </Button>
 
                     <Button
-                      onClick={() => removeTransaction(transaction.id)}
+                      onClick={() => handleDeleteClick(transaction)}
                       variant="danger"
                     >
                       Delete
@@ -236,6 +253,20 @@ function FinancePage() {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!transactionToDelete}
+        title="Delete payment?"
+        description={
+          transactionToDelete
+            ? `Are you sure you want to delete payment "$${transactionToDelete.amount}"?`
+            : "Are you sure you want to delete this payment?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }

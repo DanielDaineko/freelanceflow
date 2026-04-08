@@ -6,6 +6,7 @@ import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 function ClientsPage() {
   const {
@@ -27,6 +28,7 @@ function ClientsPage() {
   });
 
   const [editingClientId, setEditingClientId] = useState(null);
+  const [clientToDelete, setClientToDelete] = useState(null);
 
   useEffect(() => {
     fetchClients();
@@ -86,6 +88,21 @@ function ClientsPage() {
       status: "active",
       notes: "",
     });
+  };
+
+  const handleDeleteClick = (client) => {
+    setClientToDelete(client);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!clientToDelete) return;
+
+    await removeClient(clientToDelete.id);
+    setClientToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setClientToDelete(null);
   };
 
   return (
@@ -216,7 +233,7 @@ function ClientsPage() {
                     </Button>
 
                     <Button
-                      onClick={() => removeClient(client.id)}
+                      onClick={() => handleDeleteClick(client)}
                       variant="danger"
                     >
                       Delete
@@ -228,6 +245,20 @@ function ClientsPage() {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!clientToDelete}
+        title="Delete client?"
+        description={
+          clientToDelete
+            ? `Are you sure you want to delete "${clientToDelete.name}"?`
+            : "Are you sure you want to delete this client?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }
