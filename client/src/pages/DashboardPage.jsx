@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import useAuthStore from "../features/auth/authStore";
 import useDashboardStore from "../store/dashboardStore";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
 
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -38,54 +40,123 @@ function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-slate-400">Loading dashboard...</p>
+        <Card>
+          <p className="text-slate-400">Loading dashboard...</p>
+        </Card>
       ) : error ? (
-        <p className="text-red-400">{error}</p>
+        <Card>
+          <p className="text-red-400">{error}</p>
+        </Card>
+      ) : !summary ? (
+        <EmptyState
+          title="No dashboard data"
+          description="Start adding clients, projects, tasks, and payments to see analytics."
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
             {stats.map((item) => (
-              <div
-                key={item.title}
-                className="bg-slate-900 border border-slate-800 rounded-2xl p-6"
-              >
+              <Card key={item.title}>
                 <p className="text-slate-400 text-sm mb-2">{item.title}</p>
                 <h3 className="text-3xl font-bold text-white">{item.value}</h3>
-              </div>
+              </Card>
             ))}
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <Card className="xl:col-span-2">
               <h2 className="text-xl font-semibold mb-4">
                 Welcome, {user?.name || "User"}
               </h2>
 
               <p className="text-slate-400 mb-4">
-                Your workspace is getting real data from the database now.
+                Your workspace is connected to live database data and ready for
+                real usage.
               </p>
 
-              <div className="bg-slate-800 rounded-xl p-4 space-y-2">
-                <p className="text-slate-300">Email: {user?.email}</p>
-                <p className="text-slate-300">Plan: {user?.plan}</p>
-                <p className="text-slate-300">
-                  Total Clients: {summary?.clientsCount ?? 0}
-                </p>
-                <p className="text-slate-300">
-                  Total Projects: {summary?.projectsCount ?? 0}
-                </p>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm mb-2">Account</p>
+                  <p className="text-white font-medium">
+                    {user?.name || "Unknown user"}
+                  </p>
+                  <p className="text-slate-300 text-sm">{user?.email}</p>
+                  <p className="text-slate-300 text-sm mt-1">
+                    Plan: {user?.plan || "FREE"}
+                  </p>
+                </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm mb-2">
+                    Workspace Summary
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    Clients: {summary.clientsCount ?? 0}
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    Projects: {summary.projectsCount ?? 0}
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    Tasks: {summary.tasksCount ?? 0}
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    Budget: ${summary.totalBudget ?? 0}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
               <h2 className="text-xl font-semibold mb-4">Quick Notes</h2>
               <ul className="space-y-3 text-slate-300 text-sm">
                 <li>• Keep client records updated</li>
-                <li>• Create projects with realistic budgets</li>
-                <li>• Add deadlines to tasks</li>
-                <li>• Track overdue work weekly</li>
+                <li>• Review active projects weekly</li>
+                <li>• Track overdue tasks daily</li>
+                <li>• Record payments as they arrive</li>
               </ul>
-            </div>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+            <Card>
+              <h2 className="text-xl font-semibold mb-4">
+                Productivity Snapshot
+              </h2>
+              <div className="space-y-3">
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm">Open workload</p>
+                  <p className="text-white font-medium text-lg">
+                    {summary.tasksCount ?? 0} total tasks
+                  </p>
+                </div>
+
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm">Urgent attention</p>
+                  <p className="text-white font-medium text-lg">
+                    {summary.overdueTasksCount ?? 0} overdue tasks
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <h2 className="text-xl font-semibold mb-4">Business Snapshot</h2>
+              <div className="space-y-3">
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm">Client base</p>
+                  <p className="text-white font-medium text-lg">
+                    {summary.clientsCount ?? 0} clients in workspace
+                  </p>
+                </div>
+
+                <div className="bg-slate-800 rounded-xl p-4">
+                  <p className="text-slate-400 text-sm">Active delivery</p>
+                  <p className="text-white font-medium text-lg">
+                    {summary.activeProjectsCount ?? 0} active projects
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
         </>
       )}
