@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import useClientsStore from "../features/clients/clientsStore";
+import useToastStore from "../store/toastStore";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
@@ -18,6 +19,8 @@ function ClientsPage() {
     updateClient,
     removeClient,
   } = useClientsStore();
+
+  const addToast = useToastStore((state) => state.addToast);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -61,8 +64,20 @@ function ClientsPage() {
     try {
       if (editingClientId) {
         await updateClient(editingClientId, formData);
+
+        addToast({
+          title: "Client updated",
+          message: "Client information was updated successfully.",
+          type: "success",
+        });
       } else {
         await addClient(formData);
+
+        addToast({
+          title: "Client created",
+          message: "New client was added successfully.",
+          type: "success",
+        });
       }
 
       setFormData({
@@ -75,6 +90,11 @@ function ClientsPage() {
 
       setEditingClientId(null);
     } catch {
+      addToast({
+        title: "Client action failed",
+        message: "Please check the form and try again.",
+        type: "error",
+      });
       return;
     }
   };
@@ -97,8 +117,23 @@ function ClientsPage() {
   const handleConfirmDelete = async () => {
     if (!clientToDelete) return;
 
-    await removeClient(clientToDelete.id);
-    setClientToDelete(null);
+    try {
+      await removeClient(clientToDelete.id);
+
+      addToast({
+        title: "Client deleted",
+        message: `"${clientToDelete.name}" was removed.`,
+        type: "info",
+      });
+
+      setClientToDelete(null);
+    } catch {
+      addToast({
+        title: "Delete failed",
+        message: "Could not delete client.",
+        type: "error",
+      });
+    }
   };
 
   const handleCancelDelete = () => {
