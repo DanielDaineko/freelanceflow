@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import useTransactionsStore from "../store/transactionsStore";
 import useProjectsStore from "../features/projects/projectsStore";
+import useToastStore from "../store/toastStore";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
@@ -25,6 +26,8 @@ function FinancePage() {
     fetchProjects,
     isLoading: projectsLoading,
   } = useProjectsStore();
+
+  const addToast = useToastStore((state) => state.addToast);
 
   const [editingTransactionId, setEditingTransactionId] = useState(null);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
@@ -76,8 +79,20 @@ function FinancePage() {
 
       if (editingTransactionId) {
         await updateTransaction(editingTransactionId, payload);
+
+        addToast({
+          title: "Payment updated",
+          message: "Payment was updated successfully.",
+          type: "success",
+        });
       } else {
         await addTransaction(payload);
+
+        addToast({
+          title: "Payment created",
+          message: "New payment was added successfully.",
+          type: "success",
+        });
       }
 
       setFormData({
@@ -88,6 +103,11 @@ function FinancePage() {
 
       setEditingTransactionId(null);
     } catch {
+      addToast({
+        title: "Payment action failed",
+        message: "Please check the form and try again.",
+        type: "error",
+      });
       return;
     }
   };
@@ -108,8 +128,23 @@ function FinancePage() {
   const handleConfirmDelete = async () => {
     if (!transactionToDelete) return;
 
-    await removeTransaction(transactionToDelete.id);
-    setTransactionToDelete(null);
+    try {
+      await removeTransaction(transactionToDelete.id);
+
+      addToast({
+        title: "Payment deleted",
+        message: `Payment "$${transactionToDelete.amount}" was removed.`,
+        type: "info",
+      });
+
+      setTransactionToDelete(null);
+    } catch {
+      addToast({
+        title: "Delete failed",
+        message: "Could not delete payment.",
+        type: "error",
+      });
+    }
   };
 
   const handleCancelDelete = () => {

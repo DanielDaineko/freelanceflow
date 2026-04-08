@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useTasksStore from "../store/tasksStore";
 import useProjectsStore from "../features/projects/projectsStore";
+import useToastStore from "../store/toastStore";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
@@ -25,6 +26,8 @@ function TasksPage() {
     fetchProjects,
     isLoading: projectsLoading,
   } = useProjectsStore();
+
+  const addToast = useToastStore((state) => state.addToast);
 
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
@@ -87,6 +90,11 @@ function TasksPage() {
     event.preventDefault();
 
     if (!selectedProjectId) {
+      addToast({
+        title: "Project required",
+        message: "Select a project before creating a task.",
+        type: "warning",
+      });
       return;
     }
 
@@ -99,8 +107,20 @@ function TasksPage() {
 
       if (editingTaskId) {
         await updateTask(editingTaskId, payload);
+
+        addToast({
+          title: "Task updated",
+          message: "Task was updated successfully.",
+          type: "success",
+        });
       } else {
         await addTask(payload);
+
+        addToast({
+          title: "Task created",
+          message: "New task was added successfully.",
+          type: "success",
+        });
       }
 
       setFormData({
@@ -113,6 +133,11 @@ function TasksPage() {
 
       setEditingTaskId(null);
     } catch {
+      addToast({
+        title: "Task action failed",
+        message: "Please check the form and try again.",
+        type: "error",
+      });
       return;
     }
   };
@@ -135,8 +160,23 @@ function TasksPage() {
   const handleConfirmDelete = async () => {
     if (!taskToDelete) return;
 
-    await removeTask(taskToDelete.id);
-    setTaskToDelete(null);
+    try {
+      await removeTask(taskToDelete.id);
+
+      addToast({
+        title: "Task deleted",
+        message: `"${taskToDelete.title}" was removed.`,
+        type: "info",
+      });
+
+      setTaskToDelete(null);
+    } catch {
+      addToast({
+        title: "Delete failed",
+        message: "Could not delete task.",
+        type: "error",
+      });
+    }
   };
 
   const handleCancelDelete = () => {

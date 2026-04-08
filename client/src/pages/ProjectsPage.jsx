@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useProjectsStore from "../features/projects/projectsStore";
 import useClientsStore from "../features/clients/clientsStore";
+import useToastStore from "../store/toastStore";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
@@ -25,6 +26,8 @@ function ProjectsPage() {
     fetchClients,
     isLoading: clientsLoading,
   } = useClientsStore();
+
+  const addToast = useToastStore((state) => state.addToast);
 
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
@@ -78,8 +81,20 @@ function ProjectsPage() {
 
       if (editingProjectId) {
         await updateProject(editingProjectId, payload);
+
+        addToast({
+          title: "Project updated",
+          message: "Project was updated successfully.",
+          type: "success",
+        });
       } else {
         await addProject(payload);
+
+        addToast({
+          title: "Project created",
+          message: "New project was added successfully.",
+          type: "success",
+        });
       }
 
       setFormData({
@@ -93,6 +108,11 @@ function ProjectsPage() {
 
       setEditingProjectId(null);
     } catch {
+      addToast({
+        title: "Project action failed",
+        message: "Please check the form and try again.",
+        type: "error",
+      });
       return;
     }
   };
@@ -116,8 +136,23 @@ function ProjectsPage() {
   const handleConfirmDelete = async () => {
     if (!projectToDelete) return;
 
-    await removeProject(projectToDelete.id);
-    setProjectToDelete(null);
+    try {
+      await removeProject(projectToDelete.id);
+
+      addToast({
+        title: "Project deleted",
+        message: `"${projectToDelete.title}" was removed.`,
+        type: "info",
+      });
+
+      setProjectToDelete(null);
+    } catch {
+      addToast({
+        title: "Delete failed",
+        message: "Could not delete project.",
+        type: "error",
+      });
+    }
   };
 
   const handleCancelDelete = () => {
