@@ -33,6 +33,9 @@ function TasksPage() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -183,10 +186,20 @@ function TasksPage() {
     setTaskToDelete(null);
   };
 
+  const filteredTasks = tasks.filter((task) => {
+    const matchesStatus =
+      statusFilter === "all" || task.status === statusFilter;
+
+    const matchesPriority =
+      priorityFilter === "all" || task.priority === priorityFilter;
+
+    return matchesStatus && matchesPriority;
+  });
+
   const groupedTasks = {
-    todo: tasks.filter((task) => task.status === "todo"),
-    in_progress: tasks.filter((task) => task.status === "in_progress"),
-    done: tasks.filter((task) => task.status === "done"),
+    todo: filteredTasks.filter((task) => task.status === "todo"),
+    in_progress: filteredTasks.filter((task) => task.status === "in_progress"),
+    done: filteredTasks.filter((task) => task.status === "done"),
   };
 
   const columns = [
@@ -310,7 +323,33 @@ function TasksPage() {
           </Card>
 
           <Card className="xl:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">Task Board</h2>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold">Task Board</h2>
+
+              <div className="flex flex-col md:flex-row gap-3 md:w-auto w-full">
+                <Select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  className="md:w-48"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="todo">Todo</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </Select>
+
+                <Select
+                  value={priorityFilter}
+                  onChange={(event) => setPriorityFilter(event.target.value)}
+                  className="md:w-48"
+                >
+                  <option value="all">All priorities</option>
+                  <option value="low">Low priority</option>
+                  <option value="medium">Medium priority</option>
+                  <option value="high">High priority</option>
+                </Select>
+              </div>
+            </div>
 
             {tasksLoading && tasks.length === 0 ? (
               <p className="text-slate-400">Loading tasks...</p>
@@ -318,6 +357,11 @@ function TasksPage() {
               <EmptyState
                 title="No tasks yet"
                 description="Add your first task for this project."
+              />
+            ) : filteredTasks.length === 0 ? (
+              <EmptyState
+                title="No matching tasks"
+                description="Try different status or priority filters."
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
