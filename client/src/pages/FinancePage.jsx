@@ -31,6 +31,7 @@ function FinancePage() {
 
   const [editingTransactionId, setEditingTransactionId] = useState(null);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
+  const [projectFilter, setProjectFilter] = useState("all");
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -43,11 +44,16 @@ function FinancePage() {
     fetchProjects();
   }, [fetchTransactions, fetchProjects]);
 
+  const filteredTransactions = transactions.filter((transaction) => {
+    if (projectFilter === "all") return true;
+    return transaction.projectId === projectFilter;
+  });
+
   const totalIncome = useMemo(() => {
-    return transactions.reduce((sum, transaction) => {
+    return filteredTransactions.reduce((sum, transaction) => {
       return sum + (transaction.amount || 0);
     }, 0);
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -161,8 +167,26 @@ function FinancePage() {
       </div>
 
       <Card className="mb-6">
-        <h2 className="text-xl font-semibold mb-3">Total Income</h2>
-        <p className="text-4xl font-bold text-green-400">${totalIncome}</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold mb-3">Total Income</h2>
+            <p className="text-4xl font-bold text-green-400">${totalIncome}</p>
+          </div>
+
+          <div className="md:w-72">
+            <Select
+              value={projectFilter}
+              onChange={(event) => setProjectFilter(event.target.value)}
+            >
+              <option value="all">All projects</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -239,9 +263,14 @@ function FinancePage() {
               title="No payments yet"
               description="Add your first payment to start tracking income."
             />
+          ) : filteredTransactions.length === 0 ? (
+            <EmptyState
+              title="No matching payments"
+              description="Try another project filter."
+            />
           ) : (
             <div className="space-y-4">
-              {transactions.map((transaction) => (
+              {filteredTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
                   className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-start justify-between gap-4"
