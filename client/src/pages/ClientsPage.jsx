@@ -32,6 +32,7 @@ function ClientsPage() {
 
   const [editingClientId, setEditingClientId] = useState(null);
   const [clientToDelete, setClientToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchClients();
@@ -140,6 +141,16 @@ function ClientsPage() {
     setClientToDelete(null);
   };
 
+  const filteredClients = clients.filter((client) => {
+    const query = searchTerm.toLowerCase();
+
+    return (
+      client.name?.toLowerCase().includes(query) ||
+      client.email?.toLowerCase().includes(query) ||
+      client.company?.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div>
       <div className="mb-8">
@@ -228,6 +239,14 @@ function ClientsPage() {
         <Card className="xl:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Client List</h2>
 
+          <Input
+            type="text"
+            placeholder="Search clients by name, email, or company..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="mb-4"
+          />
+
           {isLoading && clients.length === 0 ? (
             <p className="text-slate-400">Loading clients...</p>
           ) : clients.length === 0 ? (
@@ -235,9 +254,14 @@ function ClientsPage() {
               title="No clients yet"
               description="Add your first client to start managing your freelance business."
             />
+          ) : filteredClients.length === 0 ? (
+            <EmptyState
+              title="No matching clients"
+              description="Try a different search query."
+            />
           ) : (
             <div className="space-y-4">
-              {clients.map((client) => (
+              {filteredClients.map((client) => (
                 <div
                   key={client.id}
                   className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-start justify-between gap-4"
