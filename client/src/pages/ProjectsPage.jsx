@@ -31,6 +31,7 @@ function ProjectsPage() {
 
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -159,6 +160,11 @@ function ProjectsPage() {
     setProjectToDelete(null);
   };
 
+  const filteredProjects = projects.filter((project) => {
+    if (statusFilter === "all") return true;
+    return project.status === statusFilter;
+  });
+
   return (
     <div>
       <div className="mb-8">
@@ -257,7 +263,21 @@ function ProjectsPage() {
         </Card>
 
         <Card className="xl:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Project List</h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <h2 className="text-xl font-semibold">Project List</h2>
+
+            <Select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              className="md:max-w-xs"
+            >
+              <option value="all">All statuses</option>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="on hold">On Hold</option>
+              <option value="completed">Completed</option>
+            </Select>
+          </div>
 
           {projectsLoading && projects.length === 0 ? (
             <p className="text-slate-400">Loading projects...</p>
@@ -266,9 +286,14 @@ function ProjectsPage() {
               title="No projects yet"
               description="Add your first project to start tracking work and budgets."
             />
+          ) : filteredProjects.length === 0 ? (
+            <EmptyState
+              title="No matching projects"
+              description="Try a different project status filter."
+            />
           ) : (
             <div className="space-y-4">
-              {projects.map((project) => (
+              {filteredProjects.map((project) => (
                 <div
                   key={project.id}
                   className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-start justify-between gap-4"
