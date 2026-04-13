@@ -82,20 +82,27 @@ Built with modern technologies and designed as a real-world portfolio project.
 
 ```bash
 client/
-src/
-components/
-ui/
-pages/
-store/
-features/
+  src/
+    api/            # axios + API calls
+    components/     # reusable components
+    ui/             # UI system (Button, Card, etc.)
+    pages/          # pages (Clients, Projects, Tasks, Finance)
+    features/       # domain logic (clients, projects, tasks)
+    store/          # global stores (zustand)
+    hooks/          # custom hooks
+    layouts/        # layout components
 
 server/
-src/
-controllers/
-routes/
-services/
-config/
-prisma/
+  src/
+    controllers/    # request handlers
+    routes/         # express routes
+    services/       # business logic
+    middleware/     # auth middleware
+    config/         # prisma, env config
+
+  prisma/
+    schema.prisma   # DB schema
+    migrations/     # DB migrations
 ```
 
 ---
