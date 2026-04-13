@@ -153,22 +153,30 @@ Auth
 - POST /api/auth/register
 - POST /api/auth/login
 - GET /api/auth/me
-  Clients
+
+Clients
+
 - GET /api/clients
 - POST /api/clients
 - PUT /api/clients/:id
 - DELETE /api/clients/:id
-  Projects
+
+Projects
+
 - GET /api/projects
 - POST /api/projects
 - PUT /api/projects/:id
 - DELETE /api/projects/:id
-  Tasks
+
+Tasks
+
 - GET /api/tasks?projectId=...
 - POST /api/tasks
 - PUT /api/tasks/:id
 - DELETE /api/tasks/:id
-  Transactions
+
+Transactions
+
 - GET /api/transactions
 - POST /api/transactions
 - PUT /api/transactions/:id
