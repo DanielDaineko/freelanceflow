@@ -7,7 +7,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 
-const app = express();
+const cors = require("cors");
 
 app.use(
   cors({
